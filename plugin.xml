@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="cordova-webview-sso-fantato" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>WebView SSO Fantato</name>
+    <description>Plugin to open a controlled WebView with close button</description>
+    <license>MIT</license>
+    <keywords>cordova, webview, sso</keywords>
+    <engines>
+        <engine name="cordova" version=">=9.0.0" />
+    </engines>
+    <platform name="android">
+        <source-file src="src/android/WebViewPlugin.java" target-dir="src/com/outsystems/plugins/webviewsso" />
+        <source-file src="src/android/WebViewActivity.java" target-dir="src/com/outsystems/plugins/webviewsso" />
+        <config-file target="AndroidManifest.xml" parent="application">
+            <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
+                      android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+                      android:launchMode="singleTop"
+                      android:exported="true"/>
+        </config-file>
+    </platform>
+    <js-module src="www/WebViewPlugin.js" name="WebViewPlugin">
+        <clobbers target="cordova.plugins.WebViewPlugin" />
+    </js-module>
+</plugin>
