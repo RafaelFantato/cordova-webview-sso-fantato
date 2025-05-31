@@ -18,14 +18,32 @@ public class WebViewActivity extends Activity {
         WebView webView = new WebView(this);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                // Handle errors
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String targetUrl = request.getUrl().toString();
+                if (!targetUrl.startsWith("http")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+                        return true;
+                    } catch (Exception e) {
+                        Log.e("WebView", "Failed to open deeplink: " + e.getMessage());
+                    }
+                }
+                return false;
             }
 
-            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.d("WebView", "loadstart: " + url);
+            }
+
             public void onPageFinished(WebView view, String url) {
-                // Notify page loaded
+                Log.d("WebView", "loadstop: " + url);
+            }
+
+            public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError error) {
+                Log.e("WebView", "loaderror: " + error.getDescription());
             }
         });
 
