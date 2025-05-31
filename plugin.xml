@@ -9,8 +9,8 @@
         <engine name="cordova" version=">=9.0.0" />
     </engines>
     <platform name="android">
-        <source-file src="src/android/WebViewPlugin.java" target-dir="src/com/outsystems/plugins/webviewsso" />
-        <source-file src="src/android/WebViewActivity.java" target-dir="src/com/outsystems/plugins/webviewsso" />
+        <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewPlugin.java" target-dir="src/com/outsystems/plugins/webviewsso" />
+        <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewActivity.java" target-dir="src/com/outsystems/plugins/webviewsso" />
         <config-file target="AndroidManifest.xml" parent="application">
             <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
                       android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
