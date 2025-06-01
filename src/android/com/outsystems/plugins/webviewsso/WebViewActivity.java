@@ -27,7 +27,24 @@ public class WebViewActivity extends Activity {
         layout.setOrientation(LinearLayout.VERTICAL);
 
         WebView webView = new WebView(this);
+
         webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setDatabaseEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
+        webView.getSettings().setAllowContentAccess(true);
+        webView.setWebChromeClient(new WebChromeClient());
+
+        String defaultUA = webView.getSettings().getUserAgentString();
+        String customUA = defaultUA + " mobileapptest/1.0";
+        webView.getSettings().setUserAgentString(customUA);
+
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cookieManager.setAcceptThirdPartyCookies(webView, true);
+}
+
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
