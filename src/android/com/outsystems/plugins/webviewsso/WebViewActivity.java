@@ -132,6 +132,8 @@ public class WebViewActivity extends Activity {
         Uri data = intent.getData();
         if (data != null && webView != null) {
             WebViewPlugin.sendEvent("onDeeplinkCalled", "data.toString()");
+            // Se quiser encerrar a WebView após o evento:
+            runOnUiThread(() -> finish());
             //webView.loadUrl(data.toString());
         }
     }
