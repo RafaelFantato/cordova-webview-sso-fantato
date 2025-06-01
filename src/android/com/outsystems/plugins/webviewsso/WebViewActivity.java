@@ -36,15 +36,15 @@ public class WebViewActivity extends Activity {
             }
 
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                Log.d("WebView", "loadstart: " + url);
+                WebViewPlugin.sendEvent("loadstart", url);
             }
 
             public void onPageFinished(WebView view, String url) {
-                Log.d("WebView", "loadstop: " + url);
+                WebViewPlugin.sendEvent("loadstop", url);
             }
 
             public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError error) {
-                Log.e("WebView", "loaderror: " + error.getDescription());
+                WebViewPlugin.sendEvent("loaderror", error.getDescription().toString());
             }
         });
 
