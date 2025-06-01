@@ -57,13 +57,16 @@ public class WebViewActivity extends Activity {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
+        webView.getSettings().setAppCacheEnabled(true); // Opcional
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowContentAccess(true);
+        webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+
         webView.setWebChromeClient(new WebChromeClient());
 
         String defaultUA = webView.getSettings().getUserAgentString();
         String customUA = defaultUA + " mobileapptest/1.0";
-        webView.getSettings().setUserAgentString(customUA);
+        webView.getSettings().setUserAgentString(defaultUA);
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
@@ -71,6 +74,7 @@ public class WebViewActivity extends Activity {
             cookieManager.setAcceptThirdPartyCookies(webView, true);
         
         }
+        cookieManager.setAcceptFileSchemeCookies(true);
 
 
         webView.setWebViewClient(new WebViewClient() {
