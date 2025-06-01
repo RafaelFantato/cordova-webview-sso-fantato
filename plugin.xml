@@ -41,14 +41,8 @@
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
       <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
                 android:exported="true"
-                android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar"/>
-    </config-file>
-
-    <config-file target="AndroidManifest.xml" parent="application">
-            <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
-                      android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
-                      android:launchMode="singleTop"
-                      android:exported="true"/>
+                android:launchMode="singleTop"
+                android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
     </config-file>
   </platform>
 
