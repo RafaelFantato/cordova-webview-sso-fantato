@@ -127,11 +127,11 @@ public class WebViewActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setIntent(intent); // Atualiza o Intent usado por getIntent()
+        setIntent(intent); // garante que getIntent() esteja atualizado
 
-        String newUrl = extractUrlFromIntent(intent);
-        if (newUrl != null && webView != null) {
-            webView.loadUrl(newUrl); // Atualiza a WebView sem reiniciar
+        Uri data = intent.getData();
+        if (data != null && webView != null) {
+            webView.loadUrl(data.toString());
         }
     }
 
