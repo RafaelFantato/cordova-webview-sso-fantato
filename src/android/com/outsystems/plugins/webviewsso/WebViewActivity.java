@@ -7,8 +7,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+import android.widget.LinearLayout;
 import android.widget.Button;
-import android.webkit.*;
+
+
 public class WebViewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -2,14 +2,14 @@ package com.outsystems.plugins.webviewsso;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import android.util.Log;
-import org.apache.cordova.*;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
