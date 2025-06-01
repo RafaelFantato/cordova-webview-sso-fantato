@@ -4,19 +4,24 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceError;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+// Estes 3 abaixo são essenciais para os erros que você reportou:
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
+import android.webkit.CookieManager;
+
 import android.widget.LinearLayout;
 import android.widget.Button;
+
+import androidx.annotation.RequiresApi;
 
 public class WebViewActivity extends Activity {
     @Override
