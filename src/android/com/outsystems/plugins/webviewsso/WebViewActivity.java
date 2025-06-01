@@ -64,8 +64,8 @@ public class WebViewActivity extends Activity {
         webView.setWebChromeClient(new WebChromeClient());
 
         String defaultUA = webView.getSettings().getUserAgentString();
-        String customUA = defaultUA + " mobileapptest/1.0";
-        webView.getSettings().setUserAgentString(defaultUA);
+        String customUA = defaultUA + " OutSystemsApp v.0.1.0";
+        webView.getSettings().setUserAgentString(customUA);
 
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
@@ -131,7 +131,8 @@ public class WebViewActivity extends Activity {
 
         Uri data = intent.getData();
         if (data != null && webView != null) {
-            webView.loadUrl(data.toString());
+            WebViewPlugin.sendEvent("onDeeplinkCalled", "data.toString()");
+            //webView.loadUrl(data.toString());
         }
     }
 
