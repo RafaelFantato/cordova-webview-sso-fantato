@@ -33,6 +33,26 @@ public class WebViewActivity extends Activity {
 
         WebView webView = new WebView(this);
 
+        LinearLayout.LayoutParams webViewParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            0, // altura zero, controlada pelo weight
+            1  // peso 1 para ocupar todo o espaço disponível
+        );
+        webView.setLayoutParams(webViewParams);
+
+
+        // Botão ocupa apenas o necessário
+        Button closeButton = new Button(this);
+        closeButton.setText("Close");
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        closeButton.setLayoutParams(buttonParams);
+
+        // Botão fecha a activity
+        closeButton.setOnClickListener(v -> finish());
+
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
@@ -48,7 +68,8 @@ public class WebViewActivity extends Activity {
         cookieManager.setAcceptCookie(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.setAcceptThirdPartyCookies(webView, true);
-}
+        
+        }
 
 
         webView.setWebViewClient(new WebViewClient() {
@@ -85,9 +106,7 @@ public class WebViewActivity extends Activity {
             }
         });
 
-        Button closeButton = new Button(this);
-        closeButton.setText("Close");
-        closeButton.setOnClickListener(v -> finish());
+
 
         layout.addView(webView);
         layout.addView(closeButton);
