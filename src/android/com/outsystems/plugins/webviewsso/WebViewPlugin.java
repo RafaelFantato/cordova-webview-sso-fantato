@@ -1,4 +1,4 @@
-package cordova.plugin.webviewplugin;
+package com.outsystems.plugins.webviewsso;
 
 import android.app.Activity;
 import android.content.Intent;

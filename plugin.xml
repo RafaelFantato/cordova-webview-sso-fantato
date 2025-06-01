@@ -9,23 +9,41 @@
   <keywords>cordova, webview, sso, plugin</keywords>
   <author email="rafael@fantato.com">Rafael Fantato</author>
 
+
+  <!-- JS que será injetado no lado web -->
+  <js-module src="www/WebViewPlugin.js" name="WebViewPlugin">
+    <clobbers target="cordova.plugins.WebViewPlugin" />
+  </js-module>
+
+
+
   <!-- Plataforma Android -->
   <platform name="android">
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="WebViewPlugin">
-        <param name="android-package" value="com.fantato.webviewsso.WebViewPlugin" />
+        <param name="android-package" value="com.outsystems.plugins.webviewsso.WebViewPlugin" />
+        <param name="onload" value="true"/>
       </feature>
     </config-file>
 
-    <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewPlugin.java" target-dir="src/com/fantato/webviewsso" />
+    <!-- Permission for internet access -->
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.INTERNET"/>
+    </config-file>
+
+
+    <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewPlugin.java" target-dir="src/com/outsystems/plugins/webviewsso" />
 
     <!-- Atividade que abre o WebView -->
-    <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewActivity.java" target-dir="src/com/fantato/webviewsso" />
+    <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewActivity.java" target-dir="src/com/outsystems/plugins/webviewsso" />
 
-    <!-- Adiciona permissão de internet -->
-    <config-file target="AndroidManifest.xml" parent="/*">
-      <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android activity declaration -->
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+      <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
+                android:exported="true"
+                android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar"/>
     </config-file>
+
     <config-file target="AndroidManifest.xml" parent="application">
             <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
                       android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
@@ -34,8 +52,4 @@
     </config-file>
   </platform>
 
-  <!-- JS que será injetado no lado web -->
-  <js-module src="www/WebViewPlugin.js" name="WebViewPlugin">
-    <clobbers target="cordova.plugins.WebViewPlugin" />
-  </js-module>
 </plugin>
