@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.View;
 
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -16,17 +18,19 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.Button;
 
-
 public class WebViewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
 
         WebView webView = new WebView(this);
         webView.getSettings().setJavaScriptEnabled(true);
+
         webView.setWebViewClient(new WebViewClient() {
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
                 if (!targetUrl.startsWith("http")) {
@@ -43,27 +47,25 @@ public class WebViewActivity extends Activity {
                 return false;
             }
 
+            @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 WebViewPlugin.sendEvent("loadstart", url);
             }
 
+            @Override
             public void onPageFinished(WebView view, String url) {
                 WebViewPlugin.sendEvent("loadstop", url);
             }
 
-            public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError error) {
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 WebViewPlugin.sendEvent("loaderror", error.getDescription().toString());
             }
         });
 
         Button closeButton = new Button(this);
         closeButton.setText("Close");
-        closeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        closeButton.setOnClickListener(v -> finish());
 
         layout.addView(webView);
         layout.addView(closeButton);
