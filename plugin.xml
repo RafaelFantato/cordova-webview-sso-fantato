@@ -39,10 +39,18 @@
 
     <!-- Android activity declaration -->
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
+        <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
                 android:exported="true"
                 android:launchMode="singleTop"
-                android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
+                android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+           <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data android:scheme="app.outsystems.dohledev.MobileSandbox" />
+        </intent-filter>
+        </activity>
     </config-file>
   </platform>
 

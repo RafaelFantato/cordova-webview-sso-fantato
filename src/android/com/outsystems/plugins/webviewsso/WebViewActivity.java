@@ -24,14 +24,15 @@ import android.widget.Button;
 import androidx.annotation.RequiresApi;
 
 public class WebViewActivity extends Activity {
+    private WebView webView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        webView = new WebView(this);
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-
-        WebView webView = new WebView(this);
 
         LinearLayout.LayoutParams webViewParams = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -116,5 +117,26 @@ public class WebViewActivity extends Activity {
         if (url != null) {
             webView.loadUrl(url);
         }
+    }
+
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent); // Atualiza o Intent usado por getIntent()
+
+        String newUrl = extractUrlFromIntent(intent);
+        if (newUrl != null && webView != null) {
+            webView.loadUrl(newUrl); // Atualiza a WebView sem reiniciar
+        }
+    }
+
+    private String extractUrlFromIntent(Intent intent) {
+        Uri data = intent.getData();
+        if (data != null) {
+            return data.toString(); // Para deep links tipo myapp://...
+        }
+        return intent.getStringExtra("url");
     }
 }
