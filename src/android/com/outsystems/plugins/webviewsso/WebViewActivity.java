@@ -129,7 +129,11 @@ public class WebViewActivity extends Activity {
         }
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        WebViewPlugin.sendEvent("onWebViewClosed", ""); // ou envie dados, se quiser
+    }
 
     @Override
     protected void onNewIntent(Intent intent) {
