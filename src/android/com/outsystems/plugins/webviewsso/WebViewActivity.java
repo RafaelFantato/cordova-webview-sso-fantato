@@ -29,6 +29,9 @@ public class WebViewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.d("WebViewActivity", "onCreate called with intent: " + getIntent().getData());
+
         webView = new WebView(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -44,7 +47,7 @@ public class WebViewActivity extends Activity {
 
         // Botão ocupa apenas o necessário
         Button closeButton = new Button(this);
-        closeButton.setText("Close");
+        closeButton.setText("Cancel");
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -81,7 +84,11 @@ public class WebViewActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
                 if (!targetUrl.startsWith("http")) {
-                    try {
+
+                    WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
+                    finish();
+                    return true;
+                    /*try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
@@ -89,7 +96,7 @@ public class WebViewActivity extends Activity {
                         return true;
                     } catch (Exception e) {
                         Log.e("WebView", "Failed to open deeplink: " + e.getMessage());
-                    }
+                    }*/
                 }
                 return false;
             }
@@ -129,9 +136,10 @@ public class WebViewActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent); // garante que getIntent() esteja atualizado
 
-        
+
         Uri data = intent.getData();
         Log.d("DEEPLINK", "Received deep link: " + data.toString());
+
         if (data != null && webView != null) {
             WebViewPlugin.sendEvent("onDeeplinkCalled", "data.toString()");
             // Se quiser encerrar a WebView após o evento:
