@@ -48,7 +48,7 @@
             <category android:name="android.intent.category.DEFAULT" />
             <category android:name="android.intent.category.BROWSABLE" />
 
-            <data android:scheme="app.outsystems.dohledev.MobileSandbox" />
+            <data android:scheme="app.outsystems.dohledev.mobilesandbox" />
         </intent-filter>
         </activity>
     </config-file>
