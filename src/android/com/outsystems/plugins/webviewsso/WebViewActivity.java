@@ -83,15 +83,24 @@ public class WebViewActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
-                    Log.d("URL Loading", targetUrl);
+                Log.d("URL Loading", targetUrl);
                 
                 if (!targetUrl.startsWith("http")) {
                     
-                    Log.d("DEEPLINK", "Send Event link: " + targetUrl);
-                    WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
+                    Log.d("DEEPLINK", "Returning Deeplink to Plugin: " + targetUrl);
+
+                    // Substitua a chamada estática por este bloco:
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("deeplink_result", targetUrl);
+                    setResult(Activity.RESULT_OK, resultIntent); // Define o resultado como OK
+                    
+                    finish(); // Encerra a Activity e retorna o resultado
+                    return true;
+                            
+                    /*WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
                     finish();
                     return true;
-                    /*try {
+                    try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
@@ -135,9 +144,14 @@ public class WebViewActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        WebViewPlugin.sendEvent("onWebViewClosed", ""); // ou envie dados, se quiser
+        // Apenas se não houver um resultado já definido (deeplink)
+        if (isFinishing() && getCallingActivity() != null && getResultCode() != Activity.RESULT_OK) {
+            setResult(Activity.RESULT_CANCELED);
+        }
+        
+        //WebViewPlugin.sendEvent("onWebViewClosed", ""); // ou envie dados, se quiser
     }
-
+    /*
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -154,7 +168,7 @@ public class WebViewActivity extends Activity {
             //webView.loadUrl(data.toString());
         }
     }
-
+    */
     private String extractUrlFromIntent(Intent intent) {
         Uri data = intent.getData();
         if (data != null) {
