@@ -25,9 +25,7 @@ import androidx.annotation.RequiresApi;
 
 public class WebViewActivity extends Activity {
     private WebView webView;
-    // Adicione uma variável de controle na classe WebViewActivity
-    private boolean deeplinkHandled = false;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +47,7 @@ public class WebViewActivity extends Activity {
 
         // Botão ocupa apenas o necessário
         Button closeButton = new Button(this);
-        closeButton.setText("Abbrechen");
+        closeButton.setText("Cancel");
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -85,27 +83,15 @@ public class WebViewActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
-                Log.d("URL Loading", targetUrl);
+                    Log.d("URL Loading", targetUrl);
                 
                 if (!targetUrl.startsWith("http")) {
                     
-                    Log.d("DEEPLINK", "Returning Deeplink to Plugin: " + targetUrl);
-                    
-                    // 1. Define a flag como true
-                    deeplinkHandled = true;
-                    
-                    // Substitua a chamada estática por este bloco:
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra("deeplink_result", targetUrl);
-                    setResult(Activity.RESULT_OK, resultIntent); // Define o resultado como OK
-                    
-                    finish(); // Encerra a Activity e retorna o resultado
-                    return true;
-                            
-                    /*WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
+                    Log.d("DEEPLINK", "Send Event link: " + targetUrl);
+                    WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
                     finish();
                     return true;
-                    try {
+                    /*try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
@@ -149,15 +135,9 @@ public class WebViewActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Se a Activity está terminando E o deeplink NÃO foi tratado, 
-        // envie um resultado de CANCELAMENTO.
-        if (isFinishing() && getCallingActivity() != null && !deeplinkHandled) { 
-            setResult(Activity.RESULT_CANCELED);
-        }
-        
-        //WebViewPlugin.sendEvent("onWebViewClosed", ""); // ou envie dados, se quiser
+        WebViewPlugin.sendEvent("onWebViewClosed", ""); // ou envie dados, se quiser
     }
-    /*
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -174,7 +154,7 @@ public class WebViewActivity extends Activity {
             //webView.loadUrl(data.toString());
         }
     }
-    */
+
     private String extractUrlFromIntent(Intent intent) {
         Uri data = intent.getData();
         if (data != null) {
