@@ -88,10 +88,10 @@ public class WebViewActivity extends Activity {
                 if (!targetUrl.startsWith("http")) {
                     
                     Log.d("DEEPLINK", "Send Event link: " + targetUrl);
-                    //WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
-                    //finish();
-                    //return true;
-                    try {
+                    WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
+                    finish();
+                    return true;
+                    /*try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
@@ -99,7 +99,7 @@ public class WebViewActivity extends Activity {
                         return true;
                     } catch (Exception e) {
                         Log.e("WebView", "Failed to open deeplink: " + e.getMessage());
-                    }
+                    }*/
                 }
                 return false;
             }
