@@ -39,17 +39,24 @@
 
     <!-- Android activity declaration -->
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-        <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
-                android:exported="true"
-                android:launchMode="singleTask"
-                android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
-           <intent-filter android:autoVerify="true">
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-
-            <!--data android:scheme="app.outsystems.dohledev.mobilesandbox" /-->
-        </intent-filter>
+        <activity
+            android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+        
+            <!-- Intent filter genérico para receber qualquer schema -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+        
+                <!--
+                  Não define schema fixo (para permitir múltiplos ambientes)
+                  O filtro abaixo capta QUALQUER deeplink customizado que não seja http/https.
+                -->
+                <data android:scheme="*" />
+            </intent-filter>
         </activity>
     </config-file>
   </platform>
