@@ -84,9 +84,10 @@ public class WebViewActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
                 if (!targetUrl.startsWith("http")) {
-
+                    
+                    Log.d("DEEPLINK", "Send Event link: " + targetUrl);
                     WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
-                    finish();
+                    //finish();
                     return true;
                     /*try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
