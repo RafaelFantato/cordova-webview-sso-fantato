@@ -49,7 +49,7 @@ public class WebViewActivity extends Activity {
 
         // Botão ocupa apenas o necessário
         Button closeButton = new Button(this);
-        closeButton.setText("Cancel");
+        closeButton.setText("Abbrechen");
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
