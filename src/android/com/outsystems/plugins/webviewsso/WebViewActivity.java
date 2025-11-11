@@ -83,13 +83,15 @@ public class WebViewActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
+                    Log.d("URL Loading", targetUrl);
+                
                 if (!targetUrl.startsWith("http")) {
                     
                     Log.d("DEEPLINK", "Send Event link: " + targetUrl);
-                    WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
+                    //WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
                     //finish();
-                    return true;
-                    /*try {
+                    //return true;
+                    try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
@@ -97,7 +99,7 @@ public class WebViewActivity extends Activity {
                         return true;
                     } catch (Exception e) {
                         Log.e("WebView", "Failed to open deeplink: " + e.getMessage());
-                    }*/
+                    }
                 }
                 return false;
             }
@@ -146,7 +148,7 @@ public class WebViewActivity extends Activity {
         Log.d("DEEPLINK", "Received deep link: " + data.toString());
 
         if (data != null && webView != null) {
-            WebViewPlugin.sendEvent("onDeeplinkCalled", "data.toString()");
+            WebViewPlugin.sendEvent("onDeeplinkCalled", data.toString());
             // Se quiser encerrar a WebView após o evento:
             runOnUiThread(() -> finish());
             //webView.loadUrl(data.toString());
