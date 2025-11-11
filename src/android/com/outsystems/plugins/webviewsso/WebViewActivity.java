@@ -25,7 +25,9 @@ import androidx.annotation.RequiresApi;
 
 public class WebViewActivity extends Activity {
     private WebView webView;
-
+    // Adicione uma variável de controle na classe WebViewActivity
+    private boolean deeplinkHandled = false;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,7 +90,10 @@ public class WebViewActivity extends Activity {
                 if (!targetUrl.startsWith("http")) {
                     
                     Log.d("DEEPLINK", "Returning Deeplink to Plugin: " + targetUrl);
-
+                    
+                    // 1. Define a flag como true
+                    deeplinkHandled = true;
+                    
                     // Substitua a chamada estática por este bloco:
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("deeplink_result", targetUrl);
@@ -144,8 +149,9 @@ public class WebViewActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Apenas se não houver um resultado já definido (deeplink)
-        if (isFinishing() && getCallingActivity() != null && getResultCode() != Activity.RESULT_OK) {
+        // Se a Activity está terminando E o deeplink NÃO foi tratado, 
+        // envie um resultado de CANCELAMENTO.
+        if (isFinishing() && getCallingActivity() != null && !deeplinkHandled) { 
             setResult(Activity.RESULT_CANCELED);
         }
         
