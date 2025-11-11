@@ -1,24 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin id="cordova-webview-sso-fantato" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0"
+<plugin id="cordova-webview-sso-fantato" version="1.0.0"
+        xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
-    <name>WebView SSO Fantato</name>
-    <description>Plugin to open a controlled WebView with close button</description>
-    <license>MIT</license>
-    <keywords>cordova, webview, sso</keywords>
-    <engines>
-        <engine name="cordova" version=">=9.0.0" />
-    </engines>
-    <platform name="android">
-        <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewPlugin.java" target-dir="src/com/outsystems/plugins/webviewsso" />
-        <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewActivity.java" target-dir="src/com/outsystems/plugins/webviewsso" />
-        <config-file target="AndroidManifest.xml" parent="application">
-            <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
-                      android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
-                      android:launchMode="singleTop"
-                      android:exported="true"/>
-        </config-file>
-    </platform>
-    <js-module src="www/WebViewPlugin.js" name="WebViewPlugin">
-        <clobbers target="cordova.plugins.WebViewPlugin" />
-    </js-module>
+
+  <name>WebViewSSO</name>
+  <description>SSO WebView Plugin with close button and events</description>
+  <license>MIT</license>
+  <keywords>cordova, webview, sso, plugin</keywords>
+  <author email="rafael@fantato.com">Rafael Fantato</author>
+
+
+  <!-- JS que será injetado no lado web -->
+  <js-module src="www/WebViewPlugin.js" name="WebViewPlugin">
+    <clobbers target="cordova.plugins.WebViewPlugin" />
+  </js-module>
+
+
+
+  <!-- Plataforma Android -->
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="WebViewPlugin">
+        <param name="android-package" value="com.outsystems.plugins.webviewsso.WebViewPlugin" />
+        <param name="onload" value="true"/>
+      </feature>
+    </config-file>
+
+    <!-- Permission for internet access -->
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.INTERNET"/>
+    </config-file>
+
+
+    <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewPlugin.java" target-dir="src/com/outsystems/plugins/webviewsso" />
+
+    <!-- Atividade que abre o WebView -->
+    <source-file src="src/android/com/outsystems/plugins/webviewsso/WebViewActivity.java" target-dir="src/com/outsystems/plugins/webviewsso" />
+
+    <!-- Android activity declaration -->
+    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        <activity android:name="com.outsystems.plugins.webviewsso.WebViewActivity"
+                android:exported="true"
+                android:launchMode="singleTask"
+                android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+           <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <!--data android:scheme="app.outsystems.dohledev.mobilesandbox" /-->
+        </intent-filter>
+        </activity>
+    </config-file>
+  </platform>
+
 </plugin>

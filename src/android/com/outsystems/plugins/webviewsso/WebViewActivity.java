@@ -83,11 +83,8 @@ public class WebViewActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
-                    Log.d("URL Loading", targetUrl);
-                
                 if (!targetUrl.startsWith("http")) {
-                    
-                    Log.d("DEEPLINK", "Send Event link: " + targetUrl);
+
                     WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
                     finish();
                     return true;
@@ -132,11 +129,7 @@ public class WebViewActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        WebViewPlugin.sendEvent("onWebViewClosed", ""); // ou envie dados, se quiser
-    }
+
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -148,7 +141,7 @@ public class WebViewActivity extends Activity {
         Log.d("DEEPLINK", "Received deep link: " + data.toString());
 
         if (data != null && webView != null) {
-            WebViewPlugin.sendEvent("onDeeplinkCalled", data.toString());
+            WebViewPlugin.sendEvent("onDeeplinkCalled", "data.toString()");
             // Se quiser encerrar a WebView após o evento:
             runOnUiThread(() -> finish());
             //webView.loadUrl(data.toString());
