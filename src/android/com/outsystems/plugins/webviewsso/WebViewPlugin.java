@@ -25,6 +25,9 @@ public class WebViewPlugin extends CordovaPlugin {
     // Códigos de requisição
     private static final int WEBVIEW_REQUEST_CODE = 1001;
     
+    // Defina uma TAG constante para facilitar a filtragem no Logcat
+    private static final String TAG = "WebViewActivitySSO";
+    
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
