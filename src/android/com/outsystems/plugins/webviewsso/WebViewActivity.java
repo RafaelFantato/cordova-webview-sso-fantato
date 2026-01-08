@@ -20,6 +20,7 @@ import android.webkit.CookieManager;
 
 import android.widget.LinearLayout;
 import android.widget.Button;
+import android.graphics.Color;
 
 import androidx.annotation.RequiresApi;
 
@@ -57,6 +58,11 @@ public class WebViewActivity extends Activity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         closeButton.setLayoutParams(buttonParams);
+
+        // Ajustes visuais: fundo branco para o botão e texto escuro
+        closeButton.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        closeButton.setTextColor(Color.parseColor("#707070"));
+        closeButton.setAllCaps(false);
 
         // Botão fecha a activity
         closeButton.setOnClickListener(v -> finish());
@@ -139,7 +145,21 @@ public class WebViewActivity extends Activity {
 
 
         layout.addView(webView);
-        layout.addView(closeButton);
+
+        // Barra inferior contendo o botão, com fundo branco
+        LinearLayout bottomBar = new LinearLayout(this);
+        bottomBar.setOrientation(LinearLayout.VERTICAL);
+        bottomBar.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        int paddingPx = (int) (8 * getResources().getDisplayMetrics().density);
+        bottomBar.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        LinearLayout.LayoutParams bottomParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        bottomBar.setLayoutParams(bottomParams);
+        bottomBar.addView(closeButton);
+
+        layout.addView(bottomBar);
         setContentView(layout);
 
         String url = getIntent().getStringExtra("url");
