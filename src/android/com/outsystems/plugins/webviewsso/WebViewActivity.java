@@ -20,7 +20,7 @@ import android.webkit.CookieManager;
 
 import android.widget.LinearLayout;
 import android.widget.Button;
-import android.graphics.Color;
+import androidx.core.content.ContextCompat;
 
 import androidx.annotation.RequiresApi;
 
@@ -89,6 +89,7 @@ public class WebViewActivity extends Activity {
         cookieManager.setAcceptFileSchemeCookies(true);
 
 
+        webView.setBackgroundColor(Color.parseColor("#FFFFFF"));
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -143,6 +144,7 @@ public class WebViewActivity extends Activity {
         });
 
 
+        layout.setBackgroundColor(Color.parseColor("#FFFFFF"));
 
         layout.addView(webView);
 
