@@ -20,6 +20,7 @@ import android.webkit.CookieManager;
 
 import android.widget.LinearLayout;
 import android.widget.Button;
+import android.graphics.Color;
 import androidx.core.content.ContextCompat;
 
 import androidx.annotation.RequiresApi;
