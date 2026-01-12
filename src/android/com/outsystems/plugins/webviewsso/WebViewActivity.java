@@ -30,6 +30,7 @@ import androidx.annotation.RequiresApi;
 public class WebViewActivity extends Activity {
     private WebView webView;
     private ProgressBar loadingSpinner;
+    private String appUUID;
     // Adicione uma variável de controle na classe WebViewActivity
     private boolean deeplinkHandled = false;
     // Defina uma TAG constante para facilitar a filtragem no Logcat
@@ -190,6 +191,13 @@ public class WebViewActivity extends Activity {
         setContentView(layout);
 
         String url = getIntent().getStringExtra("url");
+        appUUID = extractUUIDFromUrl(url);
+        
+        // Definir cookie com o UUID
+        if (url != null && !appUUID.isEmpty()) {
+            CookieManager.getInstance().setCookie(url, "UUID=" + appUUID + "; Path=/");
+        }
+        
         if (url != null) {
             webView.loadUrl(url);
         }
@@ -230,5 +238,21 @@ public class WebViewActivity extends Activity {
             return data.toString(); // Para deep links tipo myapp://...
         }
         return intent.getStringExtra("url");
+    }
+
+    // Helper para extrair UUID da URL
+    private String extractUUIDFromUrl(String url) {
+        if (url == null) return "";
+        try {
+            Uri uri = Uri.parse(url);
+            String uuid = uri.getQueryParameter("UUID");
+            if (uuid != null) {
+                Log.d(TAG, "UUID extraído: " + uuid);
+                return uuid;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao extrair UUID: " + e.getMessage());
+        }
+        return "";
     }
 }
