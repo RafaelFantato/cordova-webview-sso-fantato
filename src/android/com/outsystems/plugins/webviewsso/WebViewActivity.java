@@ -21,12 +21,15 @@ import android.webkit.CookieManager;
 import android.widget.LinearLayout;
 import android.widget.Button;
 import android.graphics.Color;
+import android.widget.ProgressBar;
+import android.widget.FrameLayout;
 import androidx.core.content.ContextCompat;
 
 import androidx.annotation.RequiresApi;
 
 public class WebViewActivity extends Activity {
     private WebView webView;
+    private ProgressBar loadingSpinner;
     // Adicione uma variável de controle na classe WebViewActivity
     private boolean deeplinkHandled = false;
     // Defina uma TAG constante para facilitar a filtragem no Logcat
@@ -38,17 +41,36 @@ public class WebViewActivity extends Activity {
 
         Log.d(TAG, "onCreate called with intent: " + getIntent().getData());
 
-        webView = new WebView(this);
-
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
 
-        LinearLayout.LayoutParams webViewParams = new LinearLayout.LayoutParams(
+        // Criar FrameLayout para envolver WebView + ProgressBar
+        FrameLayout webViewContainer = new FrameLayout(this);
+        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
-            0, // altura zero, controlada pelo weight
-            1  // peso 1 para ocupar todo o espaço disponível
+            0,
+            1
+        );
+        webViewContainer.setLayoutParams(containerParams);
+
+        webView = new WebView(this);
+        FrameLayout.LayoutParams webViewParams = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
         );
         webView.setLayoutParams(webViewParams);
+
+        // Criar spinner de loading
+        loadingSpinner = new ProgressBar(this, null, android.R.attr.progressBarStyle);
+        FrameLayout.LayoutParams spinnerParams = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            android.view.Gravity.CENTER
+        );
+        loadingSpinner.setLayoutParams(spinnerParams);
+
+        webViewContainer.addView(webView);
+        webViewContainer.addView(loadingSpinner);
 
 
         // Botão ocupa apenas o necessário
@@ -130,11 +152,13 @@ public class WebViewActivity extends Activity {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                loadingSpinner.setVisibility(View.VISIBLE);
                 WebViewPlugin.sendEvent("loadstart", url);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                loadingSpinner.setVisibility(View.GONE);
                 WebViewPlugin.sendEvent("loadstop", url);
             }
 
@@ -147,7 +171,7 @@ public class WebViewActivity extends Activity {
 
         layout.setBackgroundColor(Color.parseColor("#FFFFFF"));
 
-        layout.addView(webView);
+        layout.addView(webViewContainer);
 
         // Barra inferior contendo o botão, com fundo branco
         LinearLayout bottomBar = new LinearLayout(this);
