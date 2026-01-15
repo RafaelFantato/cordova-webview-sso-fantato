@@ -76,7 +76,11 @@ public class WebViewActivity extends Activity {
 
         // Botão ocupa apenas o necessário
         Button closeButton = new Button(this);
-        closeButton.setText("Abbrechen");
+        String buttonText = getIntent().getStringExtra("buttonText");
+        if (buttonText == null || buttonText.isEmpty()) {
+            buttonText = "Abbrechen";  // Valor padrão
+        }
+        closeButton.setText(buttonText);
         LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -191,7 +195,10 @@ public class WebViewActivity extends Activity {
         setContentView(layout);
 
         String url = getIntent().getStringExtra("url");
+        String buttonText = getIntent().getStringExtra("buttonText");
         appUUID = extractUUIDFromUrl(url);
+        
+        Log.d(TAG, "URL: " + url + ", buttonText: " + buttonText);
         
         // Definir cookie com o UUID
         if (url != null && !appUUID.isEmpty()) {

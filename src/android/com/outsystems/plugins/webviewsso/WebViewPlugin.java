@@ -33,7 +33,8 @@ public class WebViewPlugin extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if (action.equals("openWebView")) {
             String url = args.getString(0);
-            openWebView(url, callbackContext);
+            JSONObject options = args.length() > 1 ? args.getJSONObject(1) : new JSONObject();
+            openWebView(url, options, callbackContext);
             return true;
         } else if (action.equals("registerEventListener")) {
             eventCallback = callbackContext;
@@ -45,7 +46,7 @@ public class WebViewPlugin extends CordovaPlugin {
         return false;
     }
 
-    private void openWebView(String url, CallbackContext callbackContext) {
+    private void openWebView(String url, JSONObject options, CallbackContext callbackContext) {
         
         // 1. Salva o callbackContext da chamada original.
         this.openWebViewCallback = callbackContext;
@@ -53,14 +54,22 @@ public class WebViewPlugin extends CordovaPlugin {
         Intent intent = new Intent(cordova.getActivity(), WebViewActivity.class);
         intent.putExtra("url", url);
         
-        // 2. Inicia a Activity esperando um resultado.
+        // 2. Extrai buttonText das opções (se fornecido)
+        try {
+            if (options.has("buttonText")) {
+                String buttonText = options.getString("buttonText");
+                intent.putExtra("buttonText", buttonText);
+                Log.d(TAG, "buttonText extraído das opções: " + buttonText);
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Erro ao extrair buttonText: " + e.getMessage());
+        }
+        
+        // 3. Inicia a Activity esperando um resultado.
         cordova.startActivityForResult(this, intent, WEBVIEW_REQUEST_CODE);
         
-        //cordova.getActivity().startActivity(intent);
-        //callbackContext.success();
-
         PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
-        pluginResult.setKeepCallback(true); // Deixa o callback vivo até onActivityResult
+        pluginResult.setKeepCallback(true);
         callbackContext.sendPluginResult(pluginResult);
         
     }
