@@ -116,10 +116,11 @@ public class WebViewActivity extends Activity {
         }
         cookieManager.setAcceptFileSchemeCookies(true);
 
-        String PlatformVersion = getIntent().getStringExtra("PlatformVersion");
-        if (PlatformVersion == null || PlatformVersion.isEmpty()) {
-            PlatformVersion = "ODC";  // Valor padrão
+        String tempVersion = getIntent().getStringExtra("PlatformVersion");
+        if (tempVersion == null || tempVersion.isEmpty()) {
+            tempVersion = "ODC";  // Valor padrão
         }
+        final String platformVersion = tempVersion;
 
         webView.setBackgroundColor(Color.parseColor("#FFFFFF"));
         webView.setWebViewClient(new WebViewClient() {
