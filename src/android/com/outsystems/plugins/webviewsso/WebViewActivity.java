@@ -116,6 +116,10 @@ public class WebViewActivity extends Activity {
         }
         cookieManager.setAcceptFileSchemeCookies(true);
 
+        String PlatformVersion = getIntent().getStringExtra("PlatformVersion");
+        if (PlatformVersion == null || PlatformVersion.isEmpty()) {
+            PlatformVersion = "ODC";  // Valor padrão
+        }
 
         webView.setBackgroundColor(Color.parseColor("#FFFFFF"));
         webView.setWebViewClient(new WebViewClient() {
@@ -131,26 +135,29 @@ public class WebViewActivity extends Activity {
                     // 1. Define a flag como true
                     deeplinkHandled = true;
                     
-                    // Substitua a chamada estática por este bloco:
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra("deeplink_result", targetUrl);
-                    setResult(Activity.RESULT_OK, resultIntent); // Define o resultado como OK
-                    
-                    finish(); // Encerra a Activity e retorna o resultado
-                    return true;
-                            
-                    /*WebViewPlugin.sendEvent("onDeeplinkCalled", targetUrl);
-                    finish();
-                    return true;
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(intent);
-                        finish();
+                    if(PlatformVersion=="ODC"){
+                        // Substitua a chamada estática por este bloco:
+                        Intent resultIntent = new Intent();
+                        resultIntent.putExtra("deeplink_result", targetUrl);
+                        setResult(Activity.RESULT_OK, resultIntent); // Define o resultado como OK
+                        
+                        finish(); // Encerra a Activity e retorna o resultado
                         return true;
-                    } catch (Exception e) {
-                        Log.e("WebView", "Failed to open deeplink: " + e.getMessage());
-                    }*/
+                    }else{
+
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                            finish();
+                            return true;
+                        } catch (Exception e) {
+                            Log.e("WebView", "Failed to open deeplink: " + e.getMessage());
+                        }
+                    }
+
+                            
+                    
                 }
                 return false;
             }

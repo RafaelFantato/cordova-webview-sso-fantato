@@ -65,6 +65,17 @@ public class WebViewPlugin extends CordovaPlugin {
             Log.e(TAG, "Erro ao extrair buttonText: " + e.getMessage());
         }
         
+        // 2. Extrai PlatformVersion das opções (se fornecido)
+        try {
+            if (options.has("PlatformVersion")) {
+                String PlatformVersion = options.getString("PlatformVersion");
+                intent.putExtra("PlatformVersion", PlatformVersion);
+                Log.d(TAG, "PlatformVersion extraído das opções: " + PlatformVersion);
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Erro ao extrair PlatformVersion: " + e.getMessage());
+        }
+
         // 3. Inicia a Activity esperando um resultado.
         cordova.startActivityForResult(this, intent, WEBVIEW_REQUEST_CODE);
         
