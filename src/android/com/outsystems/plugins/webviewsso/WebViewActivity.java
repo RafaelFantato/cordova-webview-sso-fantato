@@ -136,7 +136,7 @@ public class WebViewActivity extends Activity {
                     // 1. Define a flag como true
                     deeplinkHandled = true;
                     
-                    if(PlatformVersion=="ODC"){
+                    if(platformVersion=="ODC"){
                         // Substitua a chamada estática por este bloco:
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("deeplink_result", targetUrl);
