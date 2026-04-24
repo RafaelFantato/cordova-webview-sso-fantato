@@ -6,26 +6,29 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.security.KeyChain;
 import android.util.Log;
 import android.view.View;
+import android.webkit.ClientCertRequest;
+import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
-// Estes 3 abaixo são essenciais para os erros que você reportou:
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceError;
-import android.webkit.CookieManager;
-
-import android.widget.LinearLayout;
 import android.widget.Button;
 import android.graphics.Color;
-import android.widget.ProgressBar;
 import android.widget.FrameLayout;
-import androidx.core.content.ContextCompat;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
-import androidx.annotation.RequiresApi;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public class WebViewActivity extends Activity {
     private WebView webView;
@@ -35,7 +38,21 @@ public class WebViewActivity extends Activity {
     private boolean deeplinkHandled = false;
     // Defina uma TAG constante para facilitar a filtragem no Logcat
     private static final String TAG = "WebViewActivitySSO";
-    
+
+    private String clientCertAlias;
+    private boolean clientCertEnabledByTrigger;
+    private volatile boolean clientCertArmed;
+    private final Set<String> clientCertAllowedHosts = new HashSet<>();
+
+    private class NativeBridge {
+        @JavascriptInterface
+        public void armClientCertificate() {
+            clientCertArmed = true;
+            Log.d(TAG, "Client certificate armed by page trigger");
+            WebViewPlugin.sendEvent("clientcert_armed", "");
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,6 +139,21 @@ public class WebViewActivity extends Activity {
         }
         final String platformVersion = tempVersion;
 
+        clientCertAlias = getIntent().getStringExtra("clientCertAlias");
+        clientCertEnabledByTrigger = getIntent().getBooleanExtra("clientCertEnabledByTrigger", true);
+        clientCertArmed = !clientCertEnabledByTrigger;
+
+        ArrayList<String> allowedHosts = getIntent().getStringArrayListExtra("clientCertAllowedHosts");
+        if (allowedHosts != null) {
+            for (String host : allowedHosts) {
+                if (host != null && !host.trim().isEmpty()) {
+                    clientCertAllowedHosts.add(host.trim().toLowerCase(Locale.US));
+                }
+            }
+        }
+
+        webView.addJavascriptInterface(new NativeBridge(), "WebViewPluginNative");
+
         webView.setBackgroundColor(Color.parseColor("#FFFFFF"));
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -136,7 +168,7 @@ public class WebViewActivity extends Activity {
                     // 1. Define a flag como true
                     deeplinkHandled = true;
                     
-                    if(platformVersion=="ODC"){
+                    if ("ODC".equals(platformVersion)) {
                         // Substitua a chamada estática por este bloco:
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("deeplink_result", targetUrl);
@@ -161,6 +193,11 @@ public class WebViewActivity extends Activity {
                     
                 }
                 return false;
+            }
+
+            @Override
+            public void onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
+                handleClientCertRequest(request);
             }
 
             @Override
@@ -246,6 +283,71 @@ public class WebViewActivity extends Activity {
         }
     }
     */
+
+    private void handleClientCertRequest(ClientCertRequest request) {
+        final String host = request.getHost() == null ? "" : request.getHost();
+
+        if (clientCertAlias == null || clientCertAlias.trim().isEmpty()) {
+            Log.d(TAG, "Client cert requested, but no alias was configured");
+            WebViewPlugin.sendEvent("clientcert_skipped", "alias_missing");
+            request.ignore();
+            return;
+        }
+
+        if (!isHostAllowed(host)) {
+            Log.w(TAG, "Client cert denied for non-allowed host: " + host);
+            WebViewPlugin.sendEvent("clientcert_denied_host", host);
+            request.cancel();
+            return;
+        }
+
+        if (clientCertEnabledByTrigger && !clientCertArmed) {
+            Log.d(TAG, "Client cert requested before trigger for host: " + host);
+            WebViewPlugin.sendEvent("clientcert_waiting_trigger", host);
+            request.ignore();
+            return;
+        }
+
+        final String alias = clientCertAlias.trim();
+        new Thread(() -> {
+            try {
+                PrivateKey privateKey = KeyChain.getPrivateKey(getApplicationContext(), alias);
+                X509Certificate[] certChain = KeyChain.getCertificateChain(getApplicationContext(), alias);
+
+                runOnUiThread(() -> {
+                    if (privateKey != null && certChain != null && certChain.length > 0) {
+                        Log.d(TAG, "Client cert provided for host: " + host + " with alias: " + alias);
+                        request.proceed(privateKey, certChain);
+                        WebViewPlugin.sendEvent("clientcert_proceed", host);
+                        if (clientCertEnabledByTrigger) {
+                            clientCertArmed = false;
+                        }
+                    } else {
+                        Log.e(TAG, "Client cert alias not found or empty chain: " + alias);
+                        WebViewPlugin.sendEvent("clientcert_error", "alias_not_found");
+                        request.cancel();
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    Log.e(TAG, "Error resolving client cert alias: " + e.getMessage());
+                    WebViewPlugin.sendEvent("clientcert_error", "keychain_error");
+                    request.cancel();
+                });
+            }
+        }).start();
+    }
+
+    private boolean isHostAllowed(String host) {
+        if (clientCertAllowedHosts.isEmpty()) {
+            return true;
+        }
+        if (host == null || host.trim().isEmpty()) {
+            return false;
+        }
+        return clientCertAllowedHosts.contains(host.trim().toLowerCase(Locale.US));
+    }
+
     private String extractUrlFromIntent(Intent intent) {
         Uri data = intent.getData();
         if (data != null) {

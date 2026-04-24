@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin id="cordova-webview-sso-fantato" version="1.0.0"
+<plugin id="cordova-webview-sso-dohle" version="1.2.0"
         xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -7,7 +7,7 @@
   <description>SSO WebView Plugin with close button and events</description>
   <license>MIT</license>
   <keywords>cordova, webview, sso, plugin</keywords>
-  <author email="rafael@fantato.com">Rafael Fantato</author>
+  <author email="rafael@dohle.com">Rafael Dohle</author>
 
 
   <!-- JS que será injetado no lado web -->

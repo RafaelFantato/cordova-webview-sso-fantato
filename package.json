@@ -1,9 +1,9 @@
 {
-  "name": "cordova-webview-sso-fantato",
-  "version": "1.0.0",
+  "name": "cordova-webview-sso-dohle",
+  "version": "1.2.0",
   "description": "Cordova plugin to open a controlled WebView with callbacks (loadstart, loaderror, close) and support for deep link redirects.",
   "cordova": {
-    "id": "cordova-webview-sso-fantato",
+    "id": "cordova-webview-sso-dohle",
     "platforms": [
       "android"
     ]
@@ -16,7 +16,7 @@
     "sso",
     "deeplink"
   ],
-  "author": "Rafael Fantato",
+  "author": "Rafael Dohle",
   "license": "MIT",
   "engines": [
     {

@@ -14,6 +14,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 public class WebViewPlugin extends CordovaPlugin {
 
     //private static CallbackContext eventCallback;
@@ -76,7 +78,37 @@ public class WebViewPlugin extends CordovaPlugin {
             Log.e(TAG, "Erro ao extrair PlatformVersion: " + e.getMessage());
         }
 
-        // 3. Inicia a Activity esperando um resultado.
+        // 3. Opções de client certificate (mTLS)
+        try {
+            if (options.has("clientCertAlias")) {
+                String clientCertAlias = options.getString("clientCertAlias");
+                intent.putExtra("clientCertAlias", clientCertAlias);
+                Log.d(TAG, "clientCertAlias recebido: " + clientCertAlias);
+            }
+
+            boolean enabledByTrigger = true;
+            if (options.has("clientCertEnabledByTrigger")) {
+                enabledByTrigger = options.getBoolean("clientCertEnabledByTrigger");
+            }
+            intent.putExtra("clientCertEnabledByTrigger", enabledByTrigger);
+
+            if (options.has("clientCertAllowedHosts")) {
+                JSONArray hostsArray = options.getJSONArray("clientCertAllowedHosts");
+                ArrayList<String> hosts = new ArrayList<>();
+                for (int i = 0; i < hostsArray.length(); i++) {
+                    String host = hostsArray.optString(i, "");
+                    if (!host.isEmpty()) {
+                        hosts.add(host);
+                    }
+                }
+                intent.putStringArrayListExtra("clientCertAllowedHosts", hosts);
+                Log.d(TAG, "clientCertAllowedHosts configurado com " + hosts.size() + " item(ns)");
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "Erro ao extrair opções de client certificate: " + e.getMessage());
+        }
+
+        // 4. Inicia a Activity esperando um resultado.
         cordova.startActivityForResult(this, intent, WEBVIEW_REQUEST_CODE);
         
         PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
