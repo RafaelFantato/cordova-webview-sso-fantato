@@ -48,7 +48,7 @@ public class WebViewActivity extends Activity {
         @JavascriptInterface
         public void armClientCertificate() {
             clientCertArmed = true;
-            Log.d(TAG, "Client certificate armed by page trigger");
+            Log.d(TAG, "Client certificate armed by page trigger. alias=" + clientCertAlias + ", allowedHosts=" + clientCertAllowedHosts);
             WebViewPlugin.sendEvent("clientcert_armed", "");
         }
     }
@@ -152,14 +152,21 @@ public class WebViewActivity extends Activity {
             }
         }
 
+        Log.d(TAG, "Initial config: platformVersion=" + platformVersion
+            + ", clientCertAlias=" + clientCertAlias
+            + ", clientCertEnabledByTrigger=" + clientCertEnabledByTrigger
+            + ", clientCertArmed=" + clientCertArmed
+            + ", clientCertAllowedHosts=" + clientCertAllowedHosts);
+
         webView.addJavascriptInterface(new NativeBridge(), "WebViewPluginNative");
+        Log.d(TAG, "Javascript interface registered as WebViewPluginNative");
 
         webView.setBackgroundColor(Color.parseColor("#FFFFFF"));
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String targetUrl = request.getUrl().toString();
-                Log.d(TAG, targetUrl);
+                Log.d(TAG, "shouldOverrideUrlLoading targetUrl=" + targetUrl + ", method=" + request.getMethod() + ", isMainFrame=" + request.isForMainFrame());
                 
                 if (!targetUrl.startsWith("http")) {
                     
@@ -197,23 +204,27 @@ public class WebViewActivity extends Activity {
 
             @Override
             public void onReceivedClientCertRequest(WebView view, ClientCertRequest request) {
+                Log.d(TAG, "onReceivedClientCertRequest invoked for host=" + request.getHost() + ", port=" + request.getPort());
                 handleClientCertRequest(request);
             }
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.d(TAG, "onPageStarted url=" + url);
                 loadingSpinner.setVisibility(View.VISIBLE);
                 WebViewPlugin.sendEvent("loadstart", url);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                Log.d(TAG, "onPageFinished url=" + url + ", clientCertArmed=" + clientCertArmed);
                 loadingSpinner.setVisibility(View.GONE);
                 WebViewPlugin.sendEvent("loadstop", url);
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                Log.e(TAG, "onReceivedError url=" + request.getUrl() + ", error=" + error.getDescription());
                 WebViewPlugin.sendEvent("loaderror", error.getDescription().toString());
             }
         });
@@ -250,16 +261,31 @@ public class WebViewActivity extends Activity {
         }
         
         if (url != null) {
+            Log.d(TAG, "Calling webView.loadUrl with url=" + url);
             webView.loadUrl(url);
         }
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume called. clientCertArmed=" + clientCertArmed + ", currentUrl=" + (webView != null ? webView.getUrl() : "null"));
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "onPause called. currentUrl=" + (webView != null ? webView.getUrl() : "null"));
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
+        Log.d(TAG, "onDestroy called. isFinishing=" + isFinishing() + ", deeplinkHandled=" + deeplinkHandled + ", clientCertArmed=" + clientCertArmed);
         super.onDestroy();
         // Se a Activity está terminando E o deeplink NÃO foi tratado, 
         // envie um resultado de CANCELAMENTO.
         if (isFinishing() && getCallingActivity() != null && !deeplinkHandled) { 
+            Log.d(TAG, "Setting RESULT_CANCELED because activity is finishing without deeplink");
             setResult(Activity.RESULT_CANCELED);
         }
         
@@ -287,6 +313,9 @@ public class WebViewActivity extends Activity {
     private void handleClientCertRequest(ClientCertRequest request) {
         final String host = request.getHost() == null ? "" : request.getHost();
 
+        Log.d(TAG, "Client cert requested for host=" + host + ", port=" + request.getPort() + ", alias configured=" + clientCertAlias + ", clientCertEnabledByTrigger=" + clientCertEnabledByTrigger + ", clientCertArmed=" + clientCertArmed);
+        WebViewPlugin.sendEvent("clientcert_requested", host);
+
         if (clientCertAlias == null || clientCertAlias.trim().isEmpty()) {
             Log.d(TAG, "Client cert requested, but no alias was configured");
             WebViewPlugin.sendEvent("clientcert_skipped", "alias_missing");
@@ -295,7 +324,7 @@ public class WebViewActivity extends Activity {
         }
 
         if (!isHostAllowed(host)) {
-            Log.w(TAG, "Client cert denied for non-allowed host: " + host);
+            Log.w(TAG, "Client cert denied for non-allowed host: " + host + ". allowedHosts=" + clientCertAllowedHosts);
             WebViewPlugin.sendEvent("clientcert_denied_host", host);
             request.cancel();
             return;
@@ -311,6 +340,7 @@ public class WebViewActivity extends Activity {
         final String alias = clientCertAlias.trim();
         new Thread(() -> {
             try {
+                Log.d(TAG, "Resolving client cert alias on background thread. alias=" + alias + ", host=" + host);
                 PrivateKey privateKey = KeyChain.getPrivateKey(getApplicationContext(), alias);
                 X509Certificate[] certChain = KeyChain.getCertificateChain(getApplicationContext(), alias);
 
@@ -330,7 +360,7 @@ public class WebViewActivity extends Activity {
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    Log.e(TAG, "Error resolving client cert alias: " + e.getMessage());
+                    Log.e(TAG, "Error resolving client cert alias: " + e.getMessage(), e);
                     WebViewPlugin.sendEvent("clientcert_error", "keychain_error");
                     request.cancel();
                 });
@@ -340,12 +370,23 @@ public class WebViewActivity extends Activity {
 
     private boolean isHostAllowed(String host) {
         if (clientCertAllowedHosts.isEmpty()) {
+            Log.d(TAG, "Host validation bypassed because no allowlist was configured");
             return true;
         }
         if (host == null || host.trim().isEmpty()) {
+            Log.w(TAG, "Host validation failed because host is empty");
             return false;
         }
-        return clientCertAllowedHosts.contains(host.trim().toLowerCase(Locale.US));
+
+        String normalizedHost = host.trim().toLowerCase(Locale.US);
+        for (String allowedHost : clientCertAllowedHosts) {
+            if (normalizedHost.equals(allowedHost) || normalizedHost.endsWith("." + allowedHost)) {
+                Log.d(TAG, "Host validation succeeded for host=" + normalizedHost + " using rule=" + allowedHost);
+                return true;
+            }
+        }
+        Log.w(TAG, "Host validation failed for host=" + normalizedHost + ". allowedHosts=" + clientCertAllowedHosts);
+        return false;
     }
 
     private String extractUrlFromIntent(Intent intent) {
@@ -366,8 +407,9 @@ public class WebViewActivity extends Activity {
                 Log.d(TAG, "UUID extraído: " + uuid);
                 return uuid;
             }
+            Log.d(TAG, "No UUID query parameter found in url=" + url);
         } catch (Exception e) {
-            Log.e(TAG, "Erro ao extrair UUID: " + e.getMessage());
+            Log.e(TAG, "Erro ao extrair UUID: " + e.getMessage(), e);
         }
         return "";
     }

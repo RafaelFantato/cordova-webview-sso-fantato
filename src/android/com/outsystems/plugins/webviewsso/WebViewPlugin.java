@@ -33,18 +33,22 @@ public class WebViewPlugin extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        Log.d(TAG, "execute called with action=" + action + ", argsLength=" + args.length());
         if (action.equals("openWebView")) {
             String url = args.getString(0);
             JSONObject options = args.length() > 1 ? args.getJSONObject(1) : new JSONObject();
+            Log.d(TAG, "openWebView requested for url=" + url + ", options=" + options.toString());
             openWebView(url, options, callbackContext);
             return true;
         } else if (action.equals("registerEventListener")) {
             eventCallback = callbackContext;
+            Log.d(TAG, "registerEventListener called. Global event callback registered");
             PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
             pluginResult.setKeepCallback(true);
             eventCallback.sendPluginResult(pluginResult);
             return true;
         }
+        Log.w(TAG, "Unknown action received: " + action);
         return false;
     }
 
@@ -52,6 +56,7 @@ public class WebViewPlugin extends CordovaPlugin {
         
         // 1. Salva o callbackContext da chamada original.
         this.openWebViewCallback = callbackContext;
+        Log.d(TAG, "Preparing WebViewActivity intent for url=" + url);
         
         Intent intent = new Intent(cordova.getActivity(), WebViewActivity.class);
         intent.putExtra("url", url);
@@ -91,6 +96,7 @@ public class WebViewPlugin extends CordovaPlugin {
                 enabledByTrigger = options.getBoolean("clientCertEnabledByTrigger");
             }
             intent.putExtra("clientCertEnabledByTrigger", enabledByTrigger);
+            Log.d(TAG, "clientCertEnabledByTrigger=" + enabledByTrigger);
 
             if (options.has("clientCertAllowedHosts")) {
                 JSONArray hostsArray = options.getJSONArray("clientCertAllowedHosts");
@@ -109,6 +115,7 @@ public class WebViewPlugin extends CordovaPlugin {
         }
 
         // 4. Inicia a Activity esperando um resultado.
+        Log.d(TAG, "Starting WebViewActivity for result. requestCode=" + WEBVIEW_REQUEST_CODE);
         cordova.startActivityForResult(this, intent, WEBVIEW_REQUEST_CODE);
         
         PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
@@ -121,15 +128,19 @@ public class WebViewPlugin extends CordovaPlugin {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == WEBVIEW_REQUEST_CODE && this.openWebViewCallback != null) {
+            Log.d(TAG, "onActivityResult received. resultCode=" + resultCode + ", hasIntent=" + (intent != null));
             
             // O resultado (DeepLink) deve estar no Intent.
             String deepLinkUrl = intent != null ? intent.getStringExtra("deeplink_result") : null;
+            Log.d(TAG, "deeplink_result=" + deepLinkUrl);
 
             if (resultCode == Activity.RESULT_OK && deepLinkUrl != null) {
                 // Evento de sucesso, com o URL do Deeplink.
+                Log.d(TAG, "Returning success to JS callback with deeplink=" + deepLinkUrl);
                 this.openWebViewCallback.success(deepLinkUrl);
             } else {
                 // Evento de cancelamento ou erro.
+                Log.w(TAG, "Returning error to JS callback: WebView closed or cancelled");
                 this.openWebViewCallback.error("WebView closed or cancelled.");
             }
             
@@ -141,6 +152,7 @@ public class WebViewPlugin extends CordovaPlugin {
     public static void sendEvent(String type, String data) {
         if (eventCallback != null) {
             try {
+                Log.d(TAG, "sendEvent type=" + type + ", data=" + data);
                 JSONObject event = new JSONObject();
                 event.put("type", type);
                 event.put("url", data);
@@ -148,8 +160,10 @@ public class WebViewPlugin extends CordovaPlugin {
                 result.setKeepCallback(true);
                 eventCallback.sendPluginResult(result);
             } catch (JSONException e) {
-                // ignore
+                Log.e(TAG, "Failed to serialize event " + type + ": " + e.getMessage());
             }
+        } else {
+            Log.d(TAG, "sendEvent skipped because eventCallback is null. type=" + type + ", data=" + data);
         }
     }
 }
