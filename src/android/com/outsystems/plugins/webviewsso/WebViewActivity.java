@@ -146,6 +146,7 @@ public class WebViewActivity extends Activity {
         if (clientCertAlias != null && !clientCertAlias.trim().isEmpty()) {
             Log.d(TAG, "Clearing WebView client cert preferences before loading URL");
             WebView.clearClientCertPreferences(() -> Log.d(TAG, "WebView client cert preferences cleared"));
+            validateConfiguredAlias(clientCertAlias.trim());
         }
 
         ArrayList<String> allowedHosts = getIntent().getStringArrayListExtra("clientCertAllowedHosts");
@@ -368,6 +369,34 @@ public class WebViewActivity extends Activity {
                     Log.e(TAG, "Error resolving client cert alias: " + e.getMessage(), e);
                     WebViewPlugin.sendEvent("clientcert_error", "keychain_error");
                     request.cancel();
+                });
+            }
+        }).start();
+    }
+
+    private void validateConfiguredAlias(String alias) {
+        new Thread(() -> {
+            try {
+                Log.d(TAG, "Validating configured client cert alias at startup. alias=" + alias);
+                PrivateKey privateKey = KeyChain.getPrivateKey(getApplicationContext(), alias);
+                X509Certificate[] certChain = KeyChain.getCertificateChain(getApplicationContext(), alias);
+
+                runOnUiThread(() -> {
+                    boolean hasKey = privateKey != null;
+                    boolean hasChain = certChain != null && certChain.length > 0;
+
+                    if (hasKey && hasChain) {
+                        Log.d(TAG, "Alias validation success. alias=" + alias + ", chainLength=" + certChain.length);
+                        WebViewPlugin.sendEvent("clientcert_alias_valid", alias);
+                    } else {
+                        Log.w(TAG, "Alias validation failed. alias=" + alias + ", hasKey=" + hasKey + ", hasChain=" + hasChain);
+                        WebViewPlugin.sendEvent("clientcert_alias_invalid", alias);
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    Log.e(TAG, "Alias validation error for alias=" + alias + ": " + e.getMessage(), e);
+                    WebViewPlugin.sendEvent("clientcert_alias_check_error", alias);
                 });
             }
         }).start();
