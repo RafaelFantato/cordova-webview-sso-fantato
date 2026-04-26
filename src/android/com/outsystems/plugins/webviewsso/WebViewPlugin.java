@@ -98,6 +98,13 @@ public class WebViewPlugin extends CordovaPlugin {
             intent.putExtra("clientCertEnabledByTrigger", enabledByTrigger);
             Log.d(TAG, "clientCertEnabledByTrigger=" + enabledByTrigger);
 
+            boolean allowSystemSelection = true;
+            if (options.has("clientCertAllowSystemSelection")) {
+                allowSystemSelection = options.getBoolean("clientCertAllowSystemSelection");
+            }
+            intent.putExtra("clientCertAllowSystemSelection", allowSystemSelection);
+            Log.d(TAG, "clientCertAllowSystemSelection=" + allowSystemSelection);
+
             if (options.has("clientCertAllowedHosts")) {
                 JSONArray hostsArray = options.getJSONArray("clientCertAllowedHosts");
                 ArrayList<String> hosts = new ArrayList<>();

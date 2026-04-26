@@ -24,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import java.security.PrivateKey;
+import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,8 +42,11 @@ public class WebViewActivity extends Activity {
 
     private String clientCertAlias;
     private boolean clientCertEnabledByTrigger;
+    private boolean clientCertAllowSystemSelection;
     private volatile boolean clientCertArmed;
     private final Set<String> clientCertAllowedHosts = new HashSet<>();
+    private ClientCertRequest pendingClientCertRequest;
+    private volatile boolean clientCertSelectionInProgress;
 
     private class NativeBridge {
         @JavascriptInterface
@@ -141,6 +145,7 @@ public class WebViewActivity extends Activity {
 
         clientCertAlias = getIntent().getStringExtra("clientCertAlias");
         clientCertEnabledByTrigger = getIntent().getBooleanExtra("clientCertEnabledByTrigger", true);
+        clientCertAllowSystemSelection = getIntent().getBooleanExtra("clientCertAllowSystemSelection", true);
         clientCertArmed = !clientCertEnabledByTrigger;
 
         if (clientCertAlias != null && !clientCertAlias.trim().isEmpty()) {
@@ -161,6 +166,7 @@ public class WebViewActivity extends Activity {
         Log.d(TAG, "Initial config: platformVersion=" + platformVersion
             + ", clientCertAlias=" + clientCertAlias
             + ", clientCertEnabledByTrigger=" + clientCertEnabledByTrigger
+            + ", clientCertAllowSystemSelection=" + clientCertAllowSystemSelection
             + ", clientCertArmed=" + clientCertArmed
             + ", clientCertAllowedHosts=" + clientCertAllowedHosts);
 
@@ -322,13 +328,6 @@ public class WebViewActivity extends Activity {
         Log.d(TAG, "Client cert requested for host=" + host + ", port=" + request.getPort() + ", alias configured=" + clientCertAlias + ", clientCertEnabledByTrigger=" + clientCertEnabledByTrigger + ", clientCertArmed=" + clientCertArmed);
         WebViewPlugin.sendEvent("clientcert_requested", host);
 
-        if (clientCertAlias == null || clientCertAlias.trim().isEmpty()) {
-            Log.d(TAG, "Client cert requested, but no alias was configured");
-            WebViewPlugin.sendEvent("clientcert_skipped", "alias_missing");
-            request.ignore();
-            return;
-        }
-
         if (!isHostAllowed(host)) {
             Log.w(TAG, "Client cert denied for non-allowed host: " + host + ". allowedHosts=" + clientCertAllowedHosts);
             WebViewPlugin.sendEvent("clientcert_denied_host", host);
@@ -343,7 +342,18 @@ public class WebViewActivity extends Activity {
             return;
         }
 
-        final String alias = clientCertAlias.trim();
+        final String alias = clientCertAlias == null ? "" : clientCertAlias.trim();
+        if (alias.isEmpty()) {
+            Log.d(TAG, "Client cert requested, but no alias was configured. Trying native alias chooser");
+            WebViewPlugin.sendEvent("clientcert_skipped", "alias_missing");
+            promptForClientCertificateSelection(request, host, request.getPort(), null, "alias_missing");
+            return;
+        }
+
+        resolveAliasAndProceed(request, host, alias, true);
+    }
+
+    private void resolveAliasAndProceed(ClientCertRequest request, String host, String alias, boolean allowSystemSelectionFallback) {
         new Thread(() -> {
             try {
                 Log.d(TAG, "Resolving client cert alias on background thread. alias=" + alias + ", host=" + host);
@@ -361,17 +371,83 @@ public class WebViewActivity extends Activity {
                     } else {
                         Log.e(TAG, "Client cert alias not found or empty chain: " + alias);
                         WebViewPlugin.sendEvent("clientcert_error", "alias_not_found");
-                        request.cancel();
+                        if (allowSystemSelectionFallback) {
+                            promptForClientCertificateSelection(request, host, request.getPort(), alias, "alias_not_found");
+                        } else {
+                            request.cancel();
+                        }
                     }
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     Log.e(TAG, "Error resolving client cert alias: " + e.getMessage(), e);
                     WebViewPlugin.sendEvent("clientcert_error", "keychain_error");
-                    request.cancel();
+                    if (allowSystemSelectionFallback) {
+                        promptForClientCertificateSelection(request, host, request.getPort(), alias, "keychain_error");
+                    } else {
+                        request.cancel();
+                    }
                 });
             }
         }).start();
+    }
+
+    private void promptForClientCertificateSelection(
+        ClientCertRequest request,
+        String host,
+        int port,
+        String suggestedAlias,
+        String reason
+    ) {
+        if (!clientCertAllowSystemSelection) {
+            Log.w(TAG, "Native client cert chooser is disabled. reason=" + reason);
+            WebViewPlugin.sendEvent("clientcert_selection_disabled", reason);
+            request.cancel();
+            return;
+        }
+
+        if (clientCertSelectionInProgress) {
+            Log.d(TAG, "Client cert chooser already in progress. Ignoring duplicate request");
+            WebViewPlugin.sendEvent("clientcert_selection_in_progress", reason);
+            request.ignore();
+            return;
+        }
+
+        clientCertSelectionInProgress = true;
+        pendingClientCertRequest = request;
+        Log.d(TAG, "Opening native client cert chooser. host=" + host + ", suggestedAlias=" + suggestedAlias + ", reason=" + reason);
+        WebViewPlugin.sendEvent("clientcert_selecting", reason);
+
+        KeyChain.choosePrivateKeyAlias(
+            this,
+            selectedAlias -> runOnUiThread(() -> {
+                clientCertSelectionInProgress = false;
+
+                ClientCertRequest pendingRequest = pendingClientCertRequest;
+                pendingClientCertRequest = null;
+                if (pendingRequest == null) {
+                    Log.w(TAG, "No pending client cert request found after chooser callback");
+                    return;
+                }
+
+                if (selectedAlias == null || selectedAlias.trim().isEmpty()) {
+                    Log.w(TAG, "User cancelled native client cert chooser");
+                    WebViewPlugin.sendEvent("clientcert_user_cancelled", "chooser_cancelled");
+                    pendingRequest.cancel();
+                    return;
+                }
+
+                String resolvedAlias = selectedAlias.trim();
+                Log.d(TAG, "User selected alias from native chooser: " + resolvedAlias);
+                WebViewPlugin.sendEvent("clientcert_alias_selected", resolvedAlias);
+                resolveAliasAndProceed(pendingRequest, host, resolvedAlias, false);
+            }),
+            (String[]) null,
+            (Principal[]) null,
+            host,
+            port,
+            suggestedAlias
+        );
     }
 
     private void validateConfiguredAlias(String alias) {
