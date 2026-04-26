@@ -143,6 +143,11 @@ public class WebViewActivity extends Activity {
         clientCertEnabledByTrigger = getIntent().getBooleanExtra("clientCertEnabledByTrigger", true);
         clientCertArmed = !clientCertEnabledByTrigger;
 
+        if (clientCertAlias != null && !clientCertAlias.trim().isEmpty()) {
+            Log.d(TAG, "Clearing WebView client cert preferences before loading URL");
+            WebView.clearClientCertPreferences(() -> Log.d(TAG, "WebView client cert preferences cleared"));
+        }
+
         ArrayList<String> allowedHosts = getIntent().getStringArrayListExtra("clientCertAllowedHosts");
         if (allowedHosts != null) {
             for (String host : allowedHosts) {
